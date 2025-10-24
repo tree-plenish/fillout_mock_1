@@ -138,19 +138,15 @@ Receives form submission data from Fillout and stores it in Supabase.
 
 **Expected Form Fields:**
 - `school_name` - Name of the school
-- `full_address` - Full address (optional)
-- `address` - Street address
 - `city` - City
 - `state` - State
-- `zip_code` - Zip code
 - `country` - Country
-- `school_contact_name` - Contact person name
 - `school_contact_email` - Contact email
 - `event_date_range` - Date range for the event
 - `event_start_date` - Event start date
 - `event_end_date` - Event end date
 - `event_type` - Type of event
-- `event_estimate_trees` - Estimated number of trees
+- `estimated_trees` - Estimated number of trees
 
 **Response:**
 ```json
@@ -209,15 +205,25 @@ The service interacts with two main tables in Supabase:
 - `state` (varchar) - State
 - `country` (varchar) - Country
 - `contact_email` (varchar) - Contact email
+- `longitude` (float8) - Longitude coordinate (optional)
+- `latitude` (float8) - Latitude coordinate (optional)
+- `total_trees_planted` (int4) - Total trees planted across all events
+- `trees_planted_this_year` (int4) - Trees planted this year
+- `participated_years` (int2) - Number of years participated
+- `owner_id` (int8) - User ID of school owner (optional)
 - `created_at` (timestamptz) - Creation timestamp
+
+**Note:** The webhook populates `name`, `city`, `state`, `country`, and `contact_email`. Other fields like `total_trees_planted` are calculated/updated by other processes.
 
 ### Events Table
 - `id` (int8) - Primary key
 - `title` (varchar) - Event title
 - `school_id` (int8) - Foreign key to schools
 - `goal_trees` (int4) - Target number of trees
+- `trees_planted` (int4) - Actual number of trees planted (defaults to 0)
 - `event_date` (date) - Event date
 - `description` (text) - Event description
+- `pickup` (bool) - Whether pickup is available (defaults to false)
 - `created_at` (timestamptz) - Creation timestamp
 
 ## How It Works
@@ -252,7 +258,7 @@ curl -X POST https://your-app.vercel.app/api/webhook/fillout \
       {"name": "country", "value": "USA"},
       {"name": "school_contact_email", "value": "contact@greenvalley.edu"},
       {"name": "event_type", "value": "Tree Planting Day"},
-      {"name": "event_estimate_trees", "value": "100"},
+      {"name": "estimated_trees", "value": "100"},
       {"name": "event_start_date", "value": "2025-11-15"}
     ]
   }'
