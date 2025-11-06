@@ -1,15 +1,15 @@
-# Fillout to Supabase Webhook Service (Next.js)
+# Form.io to Supabase Webhook Service (Next.js)
 
 
-Check out the form: https://treeplenish.fillout.com/t/7n929xW6mUus
+Form submission URL: https://lzxtmoeysjiohyc.form.io/treeplenishtest
 
 
-A Next.js webhook service that receives form submissions from Fillout and stores them in a Supabase database. Optimized for deployment on Vercel.
+A Next.js webhook service that receives form submissions from Form.io and stores them in a Supabase database. Optimized for deployment on Vercel.
 
 ## Features
 
 - Next.js API routes for serverless deployment
-- Receives POST requests from Fillout form submissions
+- Receives POST requests from Form.io form submissions
 - Automatically creates or updates school records in Supabase
 - Creates event records linked to schools
 - Error handling and validation
@@ -20,7 +20,7 @@ A Next.js webhook service that receives form submissions from Fillout and stores
 
 - Node.js (v18 or higher recommended)
 - A Supabase account and project
-- A Fillout account with a form set up
+- A Form.io account with a form set up
 - A Vercel account (for deployment)
 
 ## Installation
@@ -112,14 +112,14 @@ vercel env add SUPABASE_SERVICE_KEY
 vercel --prod
 ```
 
-## Setting Up Fillout Webhook
+## Setting Up Form.io Webhook
 
-1. Log in to your [Fillout account](https://fillout.com/)
-2. Open your form
-3. Go to **Integrations** or **Webhooks** settings
+1. Log in to your Form.io account
+2. Open your form at https://lzxtmoeysjiohyc.form.io/treeplenishtest
+3. Go to **Actions** or **Webhooks** settings
 4. Add a new webhook with the URL:
-   - For Vercel: `https://your-app.vercel.app/api/webhook/fillout`
-   - For local testing with ngrok: `https://your-ngrok-url.ngrok.io/api/webhook/fillout`
+   - For Vercel: `https://your-app.vercel.app/api/webhook/formio`
+   - For local testing with ngrok: `https://your-ngrok-url.ngrok.io/api/webhook/formio`
 
 ### Local Testing with ngrok
 
@@ -129,24 +129,31 @@ For local testing, use [ngrok](https://ngrok.com/) to create a public URL:
 ngrok http 3000
 ```
 
-Then use the ngrok URL in Fillout: `https://your-ngrok-url.ngrok.io/api/webhook/fillout`
+Then use the ngrok URL in Form.io: `https://your-ngrok-url.ngrok.io/api/webhook/formio`
 
 ## API Endpoints
 
-### POST `/api/webhook/fillout`
-Receives form submission data from Fillout and stores it in Supabase.
+### POST `/api/webhook/formio`
+Receives form submission data from Form.io and stores it in Supabase.
 
-**Expected Form Fields:**
-- `school_name` - Name of the school
+**Expected Form.io Fields:**
+- `schoolName` - Name of the school
 - `city` - City
 - `state` - State
-- `country` - Country
-- `school_contact_email` - Contact email
-- `event_date_range` - Date range for the event
-- `event_start_date` - Event start date
-- `event_end_date` - Event end date
-- `event_type` - Type of event
-- `estimated_trees` - Estimated number of trees
+- `schoolContactEmail` - Contact email
+- `typeOfSchool` - Type of school (not stored, for reference only)
+- `address` - Address (not stored, for reference only)
+- `zipPostalCode` - ZIP/Postal code (not stored, for reference only)
+- `schoolContactName` - Contact name (not stored, for reference only)
+- `role` - Role (not stored, for reference only)
+- `preferredEventDatesOrTimeline` - Event start date
+- `endDate` - Event end date
+- `typeOfEvent` - Type of event
+- `estimatedNumberOfTreesToPlant` - Estimated number of trees
+
+**Mapped to Supabase:**
+- Schools: `name`, `city`, `state`, `contact_email`
+- Events: `title`, `goal_trees`, `event_date`, `description`
 
 **Response:**
 ```json
@@ -167,7 +174,7 @@ Health check endpoint to verify the service is running.
 {
   "status": "ok",
   "timestamp": "2025-10-21T12:00:00.000Z",
-  "service": "Fillout to Supabase Webhook"
+  "service": "Form.io to Supabase Webhook"
 }
 ```
 
@@ -180,8 +187,8 @@ fillout_mock_1/
 │   │   ├── health/
 │   │   │   └── route.js          # Health check endpoint
 │   │   └── webhook/
-│   │       └── fillout/
-│   │           └── route.js      # Main webhook endpoint
+│   │       └── formio/
+│   │           └── route.js      # Form.io webhook endpoint
 │   ├── layout.js                 # Root layout
 │   └── page.js                   # Home page
 ├── lib/
@@ -228,13 +235,14 @@ The service interacts with two main tables in Supabase:
 
 ## How It Works
 
-1. Fillout sends a POST request to `/api/webhook/fillout` when a form is submitted
-2. The service extracts the form data from the request
-3. It checks if a school with the same name and city exists:
+1. Form.io sends a POST request to `/api/webhook/formio` when a form is submitted
+2. The service extracts the form data from the `submission.data` object
+3. Maps Form.io fields to the expected Supabase schema
+4. It checks if a school with the same name and city exists:
    - If yes: Updates the existing school record
    - If no: Creates a new school record
-4. Creates a new event record linked to the school
-5. Returns a success response with the created/updated records
+5. Creates a new event record linked to the school
+6. Returns a success response with the created/updated records
 
 ## Error Handling
 
@@ -245,28 +253,32 @@ The service includes comprehensive error handling:
 
 ## Testing
 
-You can test the webhook using curl:
+You can test the webhook using curl with Form.io's payload structure:
 
 ```bash
-curl -X POST https://your-app.vercel.app/api/webhook/fillout \
+curl -X POST https://your-app.vercel.app/api/webhook/formio \
   -H "Content-Type: application/json" \
   -d '{
-    "questions": [
-      {"name": "school_name", "value": "Green Valley High"},
-      {"name": "city", "value": "Springfield"},
-      {"name": "state", "value": "CA"},
-      {"name": "country", "value": "USA"},
-      {"name": "school_contact_email", "value": "contact@greenvalley.edu"},
-      {"name": "event_type", "value": "Tree Planting Day"},
-      {"name": "estimated_trees", "value": "100"},
-      {"name": "event_start_date", "value": "2025-11-15"}
-    ]
+    "request": {},
+    "submission": {
+      "data": {
+        "schoolName": "Green Valley High",
+        "city": "Springfield",
+        "state": "CA",
+        "schoolContactEmail": "contact@greenvalley.edu",
+        "typeOfEvent": "Tree Planting Day",
+        "estimatedNumberOfTreesToPlant": "100",
+        "preferredEventDatesOrTimeline": "2025-11-15",
+        "endDate": "2025-11-15"
+      }
+    },
+    "params": {}
   }'
 ```
 
 For local testing:
 ```bash
-curl -X POST http://localhost:3000/api/webhook/fillout \
+curl -X POST http://localhost:3000/api/webhook/formio \
   -H "Content-Type: application/json" \
   -d '{ ... }'
 ```
@@ -310,9 +322,9 @@ curl -X POST http://localhost:3000/api/webhook/fillout \
 - Ensure you're using Node.js v18 or higher
 
 ### Webhook not receiving data
-- Verify the webhook URL in Fillout settings
+- Verify the webhook URL in Form.io settings
 - Check the Vercel logs for incoming requests
-- Ensure the form field names match the expected names
+- Ensure the form field names match the expected Form.io field keys
 
 ### Database errors
 - Verify your Supabase credentials are correct

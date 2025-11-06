@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({
         status: 'error',
         timestamp: new Date().toISOString(),
-        service: 'Fillout to Supabase Webhook',
+        service: 'Form.io to Supabase Webhook',
         supabase: {
           connected: false,
           error: error.message

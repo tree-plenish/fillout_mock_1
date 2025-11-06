@@ -4,9 +4,9 @@ import { extractFormData, createOrUpdateSchool, createEvent } from '@/lib/supaba
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log('Received webhook data:', JSON.stringify(body, null, 2));
+    console.log('Received form.io webhook data:', JSON.stringify(body, null, 2));
 
-    // Extract form data from Fillout payload
+    // Extract form data from form.io payload
     const formData = extractFormData(body);
 
     if (!formData) {
@@ -45,7 +45,7 @@ export async function POST(request) {
       );
     }
 
-    console.log('Successfully processed form submission:', {
+    console.log('Successfully processed form.io submission:', {
       schoolId: school.id,
       eventId: event.id
     });
@@ -59,7 +59,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('Error processing form.io webhook:', error);
     return NextResponse.json(
       {
         success: false,
